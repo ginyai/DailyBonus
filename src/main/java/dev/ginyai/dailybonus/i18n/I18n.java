@@ -22,7 +22,7 @@ public final class I18n<Text> {
     private final Function<String, Optional<Asset>> resourceGetter;
     private final Function<String, Text> textParser;
 
-    private Function<String, String> rawMessageGetter;
+    private Function<String, String> rawMessageGetter = s -> null;
 
     public I18n(DailyBonusMain dailyBonus, Path dataDir, Function<String, Optional<Asset>> resourceGetter, Function<String, Text> textParser) {
         this.dailyBonus = dailyBonus;
@@ -31,12 +31,12 @@ public final class I18n<Text> {
         this.textParser = textParser;
     }
 
-    public void reload(Locale locale, boolean saveDefaultFile) throws IOException {
+    public void reload(String locale, boolean saveDefaultFile) throws IOException {
         if (!Files.exists(dataDir)) {
             Files.createDirectories(dataDir);
         }
         Path msgFile = dataDir.resolve("i18n.yml");
-        String loc = locale.toLanguageTag().toLowerCase(Locale.ROOT).replace('-', '_');
+        String loc = locale.toLowerCase(Locale.ROOT).replace('-', '_');
         LinkedList<ConfigurationNode> usableSettings = new LinkedList<>();
         if (Files.exists(msgFile)) {
             usableSettings.add(HoconConfigurationLoader.builder().setPath(msgFile).build().load());

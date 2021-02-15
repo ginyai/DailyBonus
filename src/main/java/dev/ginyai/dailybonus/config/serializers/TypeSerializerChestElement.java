@@ -55,11 +55,20 @@ public class TypeSerializerChestElement implements TypeSerializer<ChestElement> 
         throw new UnsupportedOperationException("TODO");
     }
 
-    private static Function<Function<String, String>, ItemStack> readItem(ConfigurationNode node) {
+    private static Function<Function<String, String>, ItemStack> readItem(ConfigurationNode node) throws ObjectMappingException {
         if (node.isVirtual()) {
             return f -> ItemStack.empty();
         }
         DataContainer container = DataTranslators.CONFIGURATION_NODE.translate(node);
+        if (!container.contains(DataQuery.of("ItemType"))) {
+            throw new ObjectMappingException("`ItemType` unset");
+        }
+        if (!container.contains(DataQuery.of("Count"))) {
+            throw new ObjectMappingException("`Count` unset");
+        }
+        if (!container.contains(DataQuery.of("UnsafeDamage"))) {
+            throw new ObjectMappingException("`UnsafeDamage` unset");
+        }
         return f -> process(f, container);
     }
 

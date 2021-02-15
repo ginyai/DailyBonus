@@ -28,13 +28,13 @@ public class TypeSerializerSignGroup implements TypeSerializer<SignGroup> {
     @Nullable
     @Override
     public SignGroup deserialize(@NonNull TypeToken<?> type, @NonNull ConfigurationNode node) throws ObjectMappingException {
-        String id = ConfigUtils.readNonnull(node.getNode("id"), ConfigurationNode::getString);
+        String id = ConfigUtils.readNonnull(node.getNode("Id"), ConfigurationNode::getString);
         //todo: use text parser
-        Text display = ConfigUtils.readNonnull(node.getNode("display"), n -> n.getValue(TypeTokens.TEXT_TOKEN));
-        TimeCycle cycle = ConfigUtils.readNonnull(node.getNode("cycle"), n -> n.getValue(TypeToken.of(TimeCycle.class)));
+        Text display = ConfigUtils.readNonnull(node.getNode("Display"), n -> n.getValue(TypeTokens.TEXT_TOKEN));
+        TimeCycle cycle = ConfigUtils.readNonnull(node.getNode("Cycle"), n -> n.getValue(TypeToken.of(TimeCycle.class)));
         if (cycle == TimeCycle.ONCE) {
-            LocalDateTime start = LocalDateTime.parse(ConfigUtils.readNonnull(node.getNode("start"), ConfigurationNode::getString));
-            LocalDateTime end = LocalDateTime.parse(ConfigUtils.readNonnull(node.getNode("end"), ConfigurationNode::getString));
+            LocalDateTime start = LocalDateTime.parse(ConfigUtils.readNonnull(node.getNode("Start"), ConfigurationNode::getString));
+            LocalDateTime end = LocalDateTime.parse(ConfigUtils.readNonnull(node.getNode("End"), ConfigurationNode::getString));
             return new OnceSignGroup(dailyBonus, id, display, new TimeRange<>(start, end));
         } else {
             return new CycleSignGroup(dailyBonus, id, display, cycle);
@@ -46,15 +46,15 @@ public class TypeSerializerSignGroup implements TypeSerializer<SignGroup> {
         if (obj == null) {
             return;
         }
-        node.getNode("id").setValue(obj.getId());
-        node.getNode("display").setValue(obj.getDisplayName());
+        node.getNode("Id").setValue(obj.getId());
+        node.getNode("Display").setValue(obj.getDisplayName());
         if (obj instanceof CycleSignGroup) {
-            node.getNode("cycle").setValue(((CycleSignGroup) obj).getCycle());
+            node.getNode("Cycle").setValue(((CycleSignGroup) obj).getCycle());
         } else {
-            node.getNode("cycle").setValue(TimeCycle.ONCE);
+            node.getNode("Cycle").setValue(TimeCycle.ONCE);
             TimeRange<LocalDateTime> timeRange = obj.getActiveTime();
-            node.getNode("start").setValue(timeRange.getStart().toString());
-            node.getNode("end").setValue(timeRange.getEnd().toString());
+            node.getNode("Start").setValue(timeRange.getStart().toString());
+            node.getNode("End").setValue(timeRange.getEnd().toString());
         }
     }
 }

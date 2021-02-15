@@ -8,6 +8,7 @@ import dev.ginyai.dailybonus.api.time.TimeCycle;
 import dev.ginyai.dailybonus.DailyBonusMain;
 import dev.ginyai.dailybonus.bonus.CycleBonusSet;
 import dev.ginyai.dailybonus.bonus.OnceBonusSet;
+import dev.ginyai.dailybonus.config.ConfigLoadingTracker;
 import dev.ginyai.dailybonus.util.ConfigUtils;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
@@ -29,13 +30,13 @@ public class TypeSerializerBonusSet implements TypeSerializer<BonusSet> {
     @Nullable
     @Override
     public BonusSet deserialize(@NonNull TypeToken<?> type, @NonNull ConfigurationNode node) throws ObjectMappingException {
-        String id = ConfigUtils.readNonnull(node.getNode("id"), ConfigurationNode::getString);
+        String id = ConfigLoadingTracker.INSTANCE.getCurPrefix() + "." + ConfigUtils.readNonnull(node.getNode("Id"), ConfigurationNode::getString);
         //todo: use text parser
-        Text display = ConfigUtils.readNonnull(node.getNode("display"), n -> n.getValue(TypeTokens.TEXT_TOKEN));
-        Text extra = node.getNode("extra-info").getValue(TypeTokens.TEXT_TOKEN);
-        List<BonusRequirement> requirements = node.getNode("requirements").getList(TypeToken.of(BonusRequirement.class));
-        List<BonusEntry> entries = node.getNode("entries").getList(TypeToken.of(BonusEntry.class));
-        TimeCycle cycle = node.getNode("cycle").getValue(TypeToken.of(TimeCycle.class), TimeCycle.ONCE);
+        Text display = ConfigUtils.readNonnull(node.getNode("Display"), n -> n.getValue(TypeTokens.TEXT_TOKEN));
+        Text extra = node.getNode("ExtraInfo").getValue(TypeTokens.TEXT_TOKEN);
+        List<BonusRequirement> requirements = node.getNode("Requirements").getList(TypeToken.of(BonusRequirement.class));
+        List<BonusEntry> entries = node.getNode("Entries").getList(TypeToken.of(BonusEntry.class));
+        TimeCycle cycle = node.getNode("Cycle").getValue(TypeToken.of(TimeCycle.class), TimeCycle.ONCE);
         if (cycle == TimeCycle.ONCE) {
             return new OnceBonusSet(dailyBonus, id, display, extra, requirements, entries);
         } else {

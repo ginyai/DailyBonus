@@ -39,6 +39,6 @@ public class TypeSerializerDisplaySettings implements TypeSerializer<ChestViewDi
 
     @Override
     public void serialize(@NonNull TypeToken<?> type, @Nullable ChestViewDisplaySettings obj, @NonNull ConfigurationNode value) throws ObjectMappingException {
-
+        throw new UnsupportedOperationException();
     }
 }

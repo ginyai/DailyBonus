@@ -1,9 +1,11 @@
 package dev.ginyai.dailybonus.config;
 
+import com.google.common.collect.ImmutableList;
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 
 import java.time.DayOfWeek;
+import java.util.List;
 import java.util.Locale;
 
 @SuppressWarnings({"FieldCanBeLocal", "FieldMayBeFinal"})
@@ -13,9 +15,8 @@ public class GeneralSettings {
     @Setting(value = "Storage", comment = "Settings for data storage")
     private StorageSettings storageSettings = new StorageSettings();
 
-//  todo:
-//    @Setting("Locale")
-    private Locale locale = Locale.getDefault();
+    @Setting("Locale")
+    private String locale = Locale.getDefault().toLanguageTag();
 
     @Setting(value = "StartOfDay", comment = "When a new day start.")
     private String startOfDay = "04:00";
@@ -23,11 +24,14 @@ public class GeneralSettings {
     @Setting(value = "StartOfWeek", comment = "Which day is a new week start.")
     private DayOfWeek startOfWeek = DayOfWeek.MONDAY;
 
+    @Setting(value = "SettingsDir")
+    private List<String> settingsDir = ImmutableList.of("%data_dir%/settings");
+
     public StorageSettings getStorageSettings() {
         return storageSettings;
     }
 
-    public Locale getLocale() {
+    public String getLocale() {
         return locale;
     }
 
@@ -37,5 +41,9 @@ public class GeneralSettings {
 
     public DayOfWeek getStartOfWeek() {
         return startOfWeek;
+    }
+
+    public List<String> getSettingsDir() {
+        return settingsDir;
     }
 }

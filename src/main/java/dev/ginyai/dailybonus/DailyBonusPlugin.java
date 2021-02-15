@@ -77,7 +77,7 @@ public class DailyBonusPlugin {
 
     @Listener
     public void onStartingServer(GameStartingServerEvent event) {
-        Sponge.getCommandManager().register(this, dailyBonus.getRootCommand(), "dailybonus", "sign");
+        Sponge.getCommandManager().register(this, dailyBonus.getRootCommand().toCallable(), "dailybonus", "sign");
     }
 
     @Listener

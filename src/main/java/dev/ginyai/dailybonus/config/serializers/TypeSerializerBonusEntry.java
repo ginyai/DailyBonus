@@ -21,7 +21,7 @@ public class TypeSerializerBonusEntry implements TypeSerializer<BonusEntry> {
     @Nullable
     @Override
     public BonusEntry deserialize(@NonNull TypeToken<?> type, @NonNull ConfigurationNode node) throws ObjectMappingException {
-        String typeString = ConfigUtils.readNonnull(node.getNode("type"), ConfigurationNode::getString);
+        String typeString = ConfigUtils.readNonnull(node.getNode("Type"), ConfigurationNode::getString);
         ConfigDeserializer<BonusEntry> deserializer = bonusEntries.getDeserializer(typeString).orElseThrow(() -> new ObjectMappingException("Unsupported bonus entry type: " + typeString));
         return deserializer.deserialize(node);
     }
