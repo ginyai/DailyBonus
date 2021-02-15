@@ -62,13 +62,13 @@ public class TypeSerializerChestElement implements TypeSerializer<ChestElement> 
         }
         DataContainer container = DataTranslators.CONFIGURATION_NODE.translate(node);
         if (!container.contains(DataQuery.of("ItemType"))) {
-            throw new ObjectMappingException("`ItemType` unset");
+            throw new ObjectMappingException("`ItemType` unset @" + ConfigUtils.formatNodePath(node));
         }
         if (!container.contains(DataQuery.of("Count"))) {
-            throw new ObjectMappingException("`Count` unset");
+            throw new ObjectMappingException("`Count` unset @" + ConfigUtils.formatNodePath(node));
         }
         if (!container.contains(DataQuery.of("UnsafeDamage"))) {
-            throw new ObjectMappingException("`UnsafeDamage` unset");
+            throw new ObjectMappingException("`UnsafeDamage` unset @" + ConfigUtils.formatNodePath(node));
         }
         return f -> process(f, container);
     }

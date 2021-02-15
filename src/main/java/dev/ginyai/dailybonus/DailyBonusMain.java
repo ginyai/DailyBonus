@@ -45,6 +45,8 @@ import dev.ginyai.dailybonus.i18n.I18n;
 import dev.ginyai.dailybonus.placeholder.DailyBonusPlaceholders;
 import dev.ginyai.dailybonus.time.SimpleTimeService;
 import dev.ginyai.dailybonus.util.ConfigUtils;
+import dev.ginyai.dailybonus.util.LoadingIssuesTracker;
+import dev.ginyai.dailybonus.util.ReloadFailException;
 import dev.ginyai.dailybonus.view.chest.ChestElement;
 import dev.ginyai.dailybonus.view.chest.ChestViewManager;
 import ninja.leaping.configurate.ConfigurationNode;
@@ -52,6 +54,7 @@ import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
+import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import ninja.leaping.configurate.objectmapping.serialize.TypeSerializerCollection;
 import ninja.leaping.configurate.objectmapping.serialize.TypeSerializers;
 import org.slf4j.Logger;
@@ -62,6 +65,7 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.scheduler.SpongeExecutorService;
 import org.spongepowered.api.text.Text;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -74,7 +78,6 @@ import java.time.ZoneId;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -236,122 +239,157 @@ public class DailyBonusMain implements DailyBonusService, DailyBonusTimeService 
         bonusSet.give(player);
     }
 
-    public void reload() throws Exception {
-        if (!Files.exists(dataDir)) {
-            Files.createDirectories(dataDir);
-        }
-        boolean configExits = Files.exists(generalConfigPath);
-        // general settings
-        ConfigurationLoader<CommentedConfigurationNode> generalConfigLoader = HoconConfigurationLoader.builder().setPath(generalConfigPath).build();
-        CommentedConfigurationNode rootNode = generalConfigLoader.load(options);
-        generalSettings = rootNode.getNode("DailyBonusGeneral").getValue(TypeToken.of(GeneralSettings.class), generalSettings);
-        StorageSettings storageSettings = generalSettings.getStorageSettings();
-        i18n.reload(generalSettings.getLocale(), false);
-        storage = storageManager.createStorage(storageSettings, dataDir);
-        storage.setup();
-        //todo: zone settings
-        simpleTimeService.updateSettings(ZoneId.systemDefault(), LocalTime.parse(generalSettings.getStartOfDay()), generalSettings.getStartOfWeek());
-        if (!configExits) {
-            rootNode.getNode("DailyBonusGeneral").setValue(TypeToken.of(GeneralSettings.class), generalSettings);
-            generalConfigLoader.save(rootNode);
-        }
+    public void reload() throws ReloadFailException {
+        LoadingIssuesTracker tracker1 = new LoadingIssuesTracker(this);
+        try (LoadingIssuesTracker tracker = tracker1) {
+            try {
+                if (!Files.exists(dataDir)) {
+                    Files.createDirectories(dataDir);
+                }
+            } catch (IOException e) {
+                tracker.terminated("Exception on create data dir: " + dataDir, e);
+            }
+            try {
+                boolean configExits = Files.exists(generalConfigPath);
+                // general settings
+                ConfigurationLoader<CommentedConfigurationNode> generalConfigLoader = HoconConfigurationLoader.builder().setPath(generalConfigPath).build();
+                CommentedConfigurationNode rootNode = generalConfigLoader.load(options);
+                generalSettings = rootNode.getNode("DailyBonusGeneral").getValue(TypeToken.of(GeneralSettings.class), generalSettings);
+                StorageSettings storageSettings = generalSettings.getStorageSettings();
+                i18n.reload(generalSettings.getLocale(), false);
+                storage = storageManager.createStorage(storageSettings, dataDir);
+                storage.setup();
+                //todo: zone settings
+                simpleTimeService.updateSettings(ZoneId.systemDefault(), LocalTime.parse(generalSettings.getStartOfDay()), generalSettings.getStartOfWeek());
+                if (!configExits) {
+                    rootNode.getNode("DailyBonusGeneral").setValue(TypeToken.of(GeneralSettings.class), generalSettings);
+                    generalConfigLoader.save(rootNode);
+                }
+            } catch (IOException| ObjectMappingException e) {
+                tracker.terminated("Exception on loading general config: " + generalConfigPath, e);
+            }
 
-        //sign groups
-        ImmutableMap.Builder<String, SignGroup> signGroupBuilder = ImmutableMap.builder();
-        for (String dirString: generalSettings.getSettingsDir()) {
-            try {
-                Path dirPath = Paths.get(dirString.replace("%data_dir%", dataDir.toString()));
-                ConfigLoadingTracker.INSTANCE.loadDir(dirPath);
-                if (!Files.exists(dirPath)) {
-                    if (dirPath.toRealPath().startsWith(dataDir.toRealPath())) {
-                        Files.createDirectories(dirPath);
-                    } else {
-                        continue;
-                    }
-                }
-                Files.walk(dirPath, 1)
-                    .filter(path -> path.getFileName().toString().toLowerCase(Locale.ROOT).startsWith(".conf"))
-                    .forEach(path -> {
-                        try {
-                            ConfigLoadingTracker.INSTANCE.loadFile(path);
-                            ConfigurationLoader<CommentedConfigurationNode> loader1 = HoconConfigurationLoader.builder().setPath(path).build();
-                            ConfigurationNode node = loader1.load(options);
-                            List<SignGroup> signGroupList = node.getNode("DailyBonus", "SignGroup").getList(TypeToken.of(SignGroup.class));
-                            signGroupList.forEach(signGroup -> signGroupBuilder.put(signGroup.getId(), signGroup));
-                        } catch (Exception e) {
-                            logger.error("Exception on loading config file : " + path, e);
+            //sign groups
+            ImmutableMap.Builder<String, SignGroup> signGroupBuilder = ImmutableMap.builder();
+            for (String dirString: generalSettings.getSettingsDir()) {
+                try {
+                    Path dirPath = Paths.get(dirString.replace("%data_dir%", dataDir.toString()));
+                    ConfigLoadingTracker.INSTANCE.loadDir(dirPath);
+                    if (!Files.exists(dirPath)) {
+                        if (dirPath.toRealPath().startsWith(dataDir.toRealPath())) {
+                            Files.createDirectories(dirPath);
+                        } else {
+                            continue;
                         }
-                    });
-            } catch (Exception e) {
-                logger.error("Exception on loading configs in dir: " + dirString, e);
-            }
-        }
-        signGroupMap = signGroupBuilder.orderEntriesByValue(Comparator.comparing(SignGroup::getId)).build();
-        //bonus set
-        ImmutableMap.Builder<String, BonusSet> bonusSetBuilder = ImmutableMap.builder();
-        for (String dirString: generalSettings.getSettingsDir()) {
-            try {
-                Path dirPath = Paths.get(dirString.replace("%data_dir%", dataDir.toString()));
-                ConfigLoadingTracker.INSTANCE.loadDir(dirPath);
-                if (!Files.exists(dirPath)) {
-                    if (dirPath.toRealPath().startsWith(dataDir.toRealPath())) {
-                        Files.createDirectories(dirPath);
-                    } else {
-                        continue;
                     }
+                    Files.walk(dirPath, 1)
+                        .filter(path -> path.getFileName().toString().toLowerCase(Locale.ROOT).startsWith(".conf"))
+                        .forEach(path -> {
+                            try {
+                                ConfigLoadingTracker.INSTANCE.loadFile(path);
+                                ConfigurationNode root = HoconConfigurationLoader.builder().setPath(path).build().load(options);
+                                for (ConfigurationNode node: root.getNode("DailyBonus", "SignGroup").getChildrenList()) {
+                                    try {
+                                        SignGroup signGroup = node.getValue(TypeToken.of(SignGroup.class));
+                                        //noinspection ConstantConditions
+                                        signGroupBuilder.put(signGroup.getId(), signGroup);
+                                    } catch (Exception e) {
+                                        tracker.error("Exception on loading sign group from file:" + path + ", node: " + ConfigUtils.toString(node), e);
+                                    }
+                                }
+                            } catch (Exception e) {
+                                tracker.error("Exception on loading sign groups from config file: " + path, e);
+                            }
+                        });
+                } catch (Exception e) {
+                    tracker.error("Exception on loading sign groups from config dir: " + dirString, e);
                 }
-                Files.walk(dirPath, 1)
-                    .filter(path -> path.getFileName().toString().toLowerCase(Locale.ROOT).startsWith(".conf"))
-                    .forEach(path -> {
-                        try {
-                            ConfigLoadingTracker.INSTANCE.loadFile(path);
-                            ConfigurationLoader<CommentedConfigurationNode> loader1 = HoconConfigurationLoader.builder().setPath(path).build();
-                            ConfigurationNode node = loader1.load(options);
-                            List<BonusSet> bonusSetList = node.getNode("DailyBonus", "BonusSet").getList(TypeToken.of(BonusSet.class));
-                            bonusSetList.forEach(bonusSet -> bonusSetBuilder.put(bonusSet.getId(), bonusSet));
-                        } catch (Exception e) {
-                            logger.error("Exception on loading config file : " + path, e);
-                        }
-                    });
-            } catch (Exception e) {
-                logger.error("Exception on loading configs in dir: " + dirString, e);
             }
-        }
-        bonusSetMap = bonusSetBuilder.orderEntriesByValue(Comparator.comparing(BonusSet::getId)).build();
-        //display settings
-        ImmutableMap.Builder<String, ChestViewDisplaySettings> displaySettingsBuilder = ImmutableMap.builder();
-        for (String dirString: generalSettings.getSettingsDir()) {
-            try {
-                Path dirPath = Paths.get(dirString.replace("%data_dir%", dataDir.toString()));
-                ConfigLoadingTracker.INSTANCE.loadDir(dirPath);
-                if (!Files.exists(dirPath)) {
-                    if (dirPath.toRealPath().startsWith(dataDir.toRealPath())) {
-                        Files.createDirectories(dirPath);
-                    } else {
-                        continue;
+            signGroupMap = signGroupBuilder.orderEntriesByValue(Comparator.comparing(SignGroup::getId)).build();
+            //bonus set
+            ImmutableMap.Builder<String, BonusSet> bonusSetBuilder = ImmutableMap.builder();
+            for (String dirString: generalSettings.getSettingsDir()) {
+                try {
+                    Path dirPath = Paths.get(dirString.replace("%data_dir%", dataDir.toString()));
+                    ConfigLoadingTracker.INSTANCE.loadDir(dirPath);
+                    if (!Files.exists(dirPath)) {
+                        if (dirPath.toRealPath().startsWith(dataDir.toRealPath())) {
+                            Files.createDirectories(dirPath);
+                        } else {
+                            continue;
+                        }
                     }
+                    Files.walk(dirPath, 1)
+                        .filter(path -> path.getFileName().toString().toLowerCase(Locale.ROOT).startsWith(".conf"))
+                        .forEach(path -> {
+                            try {
+                                ConfigLoadingTracker.INSTANCE.loadFile(path);
+                                ConfigurationNode root = HoconConfigurationLoader.builder().setPath(path).build().load(options);
+                                for (ConfigurationNode node: root.getNode("DailyBonus", "SignGroup").getChildrenList()) {
+                                    try {
+                                        BonusSet bonusSet = node.getValue(TypeToken.of(BonusSet.class));
+                                        //noinspection ConstantConditions
+                                        bonusSetBuilder.put(bonusSet.getId(), bonusSet);
+                                    } catch (Exception e) {
+                                        tracker.error("Exception on loading bonus set from file:" + path + ", node: " + ConfigUtils.toString(node), e);
+                                    }
+                                }
+                            } catch (Exception e) {
+                                tracker.error("Exception on loading bonus set from file : " + path, e);
+                            }
+                        });
+                } catch (Exception e) {
+                    tracker.error("Exception on loading configs in dir: " + dirString, e);
                 }
-                Files.walk(dirPath, 1)
-                    .filter(path -> path.getFileName().toString().toLowerCase(Locale.ROOT).startsWith(".conf"))
-                    .forEach(path -> {
-                        try {
-                            ConfigLoadingTracker.INSTANCE.loadFile(path);
-                            ConfigurationLoader<CommentedConfigurationNode> loader1 = HoconConfigurationLoader.builder().setPath(path).build();
-                            ConfigurationNode node = loader1.load(options);
-                            Map<String, ChestViewDisplaySettings> displaySettingsMap = ConfigUtils.readMap(node.getNode("DailyBonus", "ChestView"), node1 -> node1.getValue(TypeToken.of(ChestViewDisplaySettings.class)));
-                            displaySettingsMap.forEach((name, settings) -> {
-                                displaySettingsBuilder.put(ConfigLoadingTracker.INSTANCE.getCurPrefix() + "." +name, settings);
-                            });
-                        } catch (Exception e) {
-                            logger.error("Exception on loading config file : " + path, e);
-                        }
-                    });
-            } catch (Exception e) {
-                logger.error("Exception on loading configs in dir: " + dirString, e);
             }
+            bonusSetMap = bonusSetBuilder.orderEntriesByValue(Comparator.comparing(BonusSet::getId)).build();
+            //display settings
+            ImmutableMap.Builder<String, ChestViewDisplaySettings> displaySettingsBuilder = ImmutableMap.builder();
+            for (String dirString: generalSettings.getSettingsDir()) {
+                try {
+                    Path dirPath = Paths.get(dirString.replace("%data_dir%", dataDir.toString()));
+                    ConfigLoadingTracker.INSTANCE.loadDir(dirPath);
+                    if (!Files.exists(dirPath)) {
+                        if (dirPath.toRealPath().startsWith(dataDir.toRealPath())) {
+                            Files.createDirectories(dirPath);
+                        } else {
+                            continue;
+                        }
+                    }
+                    Files.walk(dirPath, 1)
+                        .filter(path -> path.getFileName().toString().toLowerCase(Locale.ROOT).startsWith(".conf"))
+                        .forEach(path -> {
+                            try {
+                                ConfigLoadingTracker.INSTANCE.loadFile(path);
+                                ConfigurationNode root = HoconConfigurationLoader.builder().setPath(path).build().load(options);
+                                for (Map.Entry<Object, ? extends ConfigurationNode> entry: root.getNode("DailyBonus", "ChestView").getChildrenMap().entrySet()) {
+                                    try {
+                                        //noinspection ConstantConditions
+                                        displaySettingsBuilder.put(
+                                            ConfigLoadingTracker.INSTANCE.getCurPrefix() + "." + entry.getKey().toString(),
+                                            entry.getValue().getValue(TypeToken.of(ChestViewDisplaySettings.class))
+                                        );
+                                    } catch (Exception e) {
+                                        tracker.error("Exception on loading chest view from file:" + path + ", key: " + entry.getKey(), e);
+                                    }
+                                }
+                            } catch (Exception e) {
+                                tracker.error("Exception on loading chest views from file : " + path, e);
+                            }
+                        });
+                } catch (Exception e) {
+                    tracker.error("Exception on loading chest views in dir: " + dirString, e);
+                }
+            }
+            displaySettingsMap = displaySettingsBuilder.build();
+            try {
+                playerDataManager.onReload();
+            } catch (Exception e) {
+                tracker.error("Exception on reload playerDataManager.", e);
+            }
+        } catch (RuntimeException e) {
+            tracker1.terminated("Unexpected exception happened.", e);
         }
-        displaySettingsMap = displaySettingsBuilder.build();
-        playerDataManager.onReload();
     }
 
     public Logger getLogger() {
