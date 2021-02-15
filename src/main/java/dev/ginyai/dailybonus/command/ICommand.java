@@ -4,37 +4,24 @@ import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.text.Text;
-import org.spongepowered.api.world.Location;
-import org.spongepowered.api.world.World;
+import org.spongepowered.api.command.args.CommandContext;
+import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.plugin.meta.util.NonnullByDefault;
 
-import javax.annotation.Nullable;
-import java.util.List;
-import java.util.Optional;
+import java.util.Collection;
+import java.util.Collections;
 
 @NonnullByDefault
-public interface ICommand extends CommandCallable {
+public interface ICommand extends CommandExecutor {
 
     String getName();
 
-    @Override
-    CommandResult process(CommandSource source, String arguments) throws CommandException;
-
-    @Override
-    List<String> getSuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) throws org.spongepowered.api.command.CommandException;
-
-    @Override
-    boolean testPermission(CommandSource source);
-
-    @Override
-    Optional<Text> getShortDescription(CommandSource source);
-
-    @Override
-    default Optional<Text> getHelp(CommandSource source) {
-        return Optional.of(getUsage(source));
+    default Collection<String> getAlias() {
+        return Collections.emptyList();
     }
 
     @Override
-    Text getUsage(CommandSource source);
+    CommandResult execute(CommandSource src, CommandContext args) throws CommandException;
+
+    CommandCallable toCallable();
 }

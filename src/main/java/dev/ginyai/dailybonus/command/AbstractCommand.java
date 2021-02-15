@@ -2,27 +2,27 @@ package dev.ginyai.dailybonus.command;
 
 import com.google.common.collect.ImmutableMap;
 import dev.ginyai.dailybonus.DailyBonusMain;
-import dev.ginyai.dailybonus.api.data.PlayerData;
-import dev.ginyai.dailybonus.placeholder.PlaceholderVisitor;
+import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.command.args.CommandContext;
+import org.spongepowered.api.command.args.CommandElement;
+import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.world.Location;
-import org.spongepowered.api.world.World;
 import org.spongepowered.plugin.meta.util.NonnullByDefault;
 
 import javax.annotation.Nullable;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 
 @NonnullByDefault
 public abstract class AbstractCommand implements ICommand {
 
     private final String name;
     protected final DailyBonusMain dailyBonus;
+    @Nullable
+    protected CommandCallable callable;
 
     protected AbstractCommand(String name, DailyBonusMain dailyBonus) {
         this.name = name;
@@ -35,28 +35,25 @@ public abstract class AbstractCommand implements ICommand {
     }
 
     @Override
-    public Text getUsage(CommandSource source) {
-        return getTranslation("usage");
-    }
+    public abstract CommandResult execute(CommandSource src, CommandContext args) throws CommandException;
+
+    protected abstract CommandElement getArgs();
 
     @Override
-    public Optional<Text> getShortDescription(CommandSource source) {
-        return Optional.empty();
+    public CommandCallable toCallable() {
+        if (callable == null) {
+            callable = CommandSpec.builder()
+                .permission(getPermissionString("base"))
+                .arguments(getArgs())
+                .executor(this)
+                .build()
+            ;
+        }
+        return callable;
     }
 
     protected String getPermissionString(String s) {
         return "dailybonus.command." + getName().toLowerCase(Locale.ROOT) + "." + s;
-    }
-
-    @Override
-    public abstract CommandResult process(CommandSource source, String arguments) throws CommandException;
-
-    @Override
-    public abstract List<String> getSuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) throws CommandException;
-
-    @Override
-    public boolean testPermission(CommandSource source) {
-        return source.hasPermission(getPermissionString("base"));
     }
 
     protected String getTranslationKey() {

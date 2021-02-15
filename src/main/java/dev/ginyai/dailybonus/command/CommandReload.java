@@ -4,13 +4,10 @@ import dev.ginyai.dailybonus.DailyBonusMain;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.world.Location;
-import org.spongepowered.api.world.World;
+import org.spongepowered.api.command.args.CommandContext;
+import org.spongepowered.api.command.args.CommandElement;
+import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.plugin.meta.util.NonnullByDefault;
-
-import javax.annotation.Nullable;
-import java.util.Collections;
-import java.util.List;
 
 @NonnullByDefault
 public class CommandReload extends AbstractCommand {
@@ -20,10 +17,10 @@ public class CommandReload extends AbstractCommand {
     }
 
     @Override
-    public CommandResult process(CommandSource source, String arguments) throws CommandException {
+    public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
         try {
             dailyBonus.reload();
-            source.sendMessage(getTranslation("success"));
+            src.sendMessage(getTranslation("success"));
             return CommandResult.success();
         } catch (Exception e) {
             dailyBonus.getLogger().error("Exception on reload.", e);
@@ -32,7 +29,7 @@ public class CommandReload extends AbstractCommand {
     }
 
     @Override
-    public List<String> getSuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) throws CommandException {
-        return Collections.emptyList();
+    protected CommandElement getArgs() {
+        return GenericArguments.none();
     }
 }

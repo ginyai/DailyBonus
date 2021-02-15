@@ -1,22 +1,21 @@
 package dev.ginyai.dailybonus.command;
 
 import dev.ginyai.dailybonus.DailyBonusMain;
-import dev.ginyai.dailybonus.util.UtilMethods;
+import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.text.Text;
-import org.spongepowered.api.world.Location;
-import org.spongepowered.api.world.World;
+import org.spongepowered.api.command.args.CommandContext;
+import org.spongepowered.api.command.args.CommandElement;
+import org.spongepowered.api.command.args.GenericArguments;
+import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.plugin.meta.util.NonnullByDefault;
 
-import javax.annotation.Nullable;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @NonnullByDefault
 public class TreeCommand extends AbstractCommand {
@@ -28,38 +27,32 @@ public class TreeCommand extends AbstractCommand {
     }
 
     @Override
-    public CommandResult process(CommandSource source, String arguments) throws CommandException {
-        int indexOfSpace = arguments.indexOf(' ');
-        String sub;
-        String left;
-        if (indexOfSpace < 0) {
-            sub = arguments;
-            left = "";
-        } else {
-            sub = arguments.substring(0, indexOfSpace);
-            left = arguments.substring(indexOfSpace + 1);
-        }
-        ICommand child = childrenMap.get(sub);
-        if (child == null || !child.testPermission(source)) {
-            throw new CommandException(getUsage(source));
-        }
-        return child.process(source, left);
+    public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
+        // TODO: 2021/2/15 Show something?
+        return CommandResult.success();
     }
 
     @Override
-    public List<String> getSuggestions(CommandSource source, String arguments, @Nullable Location<World> targetPosition) throws CommandException {
-        int indexOfSpace = arguments.indexOf(' ');
-        if (indexOfSpace < 0) {
-            return UtilMethods.startWith(arguments, getChildrenMap().values().stream()
-                .filter(c -> c.testPermission(source))
-                .map(ICommand::getName));
+    protected CommandElement getArgs() {
+        return GenericArguments.none();
+    }
+
+    @Override
+    public CommandCallable toCallable() {
+        if (callable == null) {
+            CommandSpec.Builder builder = CommandSpec.builder()
+                .permission(getPermissionString("base"))
+                .arguments(getArgs())
+                .executor(this);
+            for (ICommand child: childrenMap.values()) {
+                List<String> alias = new ArrayList<>();
+                alias.add(child.getName());
+                alias.addAll(child.getAlias());
+                builder.child(child.toCallable(), alias);
+            }
+            callable = builder.build();
         }
-        String sub = arguments.substring(0, indexOfSpace);
-        ICommand child = childrenMap.get(sub);
-        if (child == null || !child.testPermission(source)) {
-            return Collections.emptyList();
-        }
-        return child.getSuggestions(source, arguments.substring(indexOfSpace + 1), targetPosition);
+        return callable;
     }
 
     public void addChild(ICommand child) {
@@ -68,6 +61,7 @@ public class TreeCommand extends AbstractCommand {
             throw new IllegalArgumentException("Child command " + commandName + " is already exists.");
         }
         childrenMap.put(commandName, child);
+        callable = null;
     }
 
     public void addHelp() {
@@ -83,10 +77,7 @@ public class TreeCommand extends AbstractCommand {
         return "command.tree.";
     }
 
-    @Override
-    public Text getUsage(CommandSource source) {
-        return getTranslation("usage",
-            "children", getChildrenMap().values().stream().filter(c -> c.testPermission(source)).map(ICommand::getName).collect(Collectors.joining(", "))
-        );
+    Stream<ICommand> getUsableCommands(CommandSource src) {
+        return childrenMap.values().stream().filter(c -> c.toCallable().testPermission(src));
     }
 }
