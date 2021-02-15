@@ -12,6 +12,7 @@ import dev.ginyai.dailybonus.api.time.DailyBonusTimeService;
 import dev.ginyai.dailybonus.api.time.TimeCycle;
 import dev.ginyai.dailybonus.api.time.TimeRange;
 import dev.ginyai.dailybonus.api.view.DailyBonusViewManager;
+import dev.ginyai.dailybonus.bonus.AbstractBonusSet;
 import dev.ginyai.dailybonus.bonus.BonusEntries;
 import dev.ginyai.dailybonus.bonus.BonusEntryCommands;
 import dev.ginyai.dailybonus.bonus.BonusEntrySign;
@@ -56,6 +57,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.scheduler.SpongeExecutorService;
 import org.spongepowered.api.text.Text;
 
@@ -192,6 +194,32 @@ public class DailyBonusMain implements DailyBonusService, DailyBonusTimeService 
         storageManager.onClose();
     }
 
+    public void onPlayerJoin(Player player) {
+        playerDataManager.onPlayerJoin(player)
+            .whenCompleteAsync((trackedPlayer, t) ->
+                trackedPlayer.getPlayer().ifPresent(player1 ->
+                    bonusSetMap.values().stream()
+                        .filter(AbstractBonusSet.class::isInstance)
+                        .map(AbstractBonusSet.class::cast)
+                        .filter(AbstractBonusSet::isAutoComplete)
+                        .forEach(bonusSet -> checkAutoComplete(bonusSet, player1, trackedPlayer)))
+                , syncExecutor);
+    }
+
+    public void tick() {
+        playerDataManager.tick();
+    }
+
+    private void checkAutoComplete(AbstractBonusSet bonusSet, Player player, TrackedPlayer playerData) {
+        if (playerData.isReceived(bonusSet)) {
+            return;
+        }
+        if (!bonusSet.getRequirements().stream().allMatch(r -> r.check(playerData))) {
+            return;
+        }
+        bonusSet.give(player);
+    }
+
     public void reload() throws Exception {
         if (!Files.exists(dataDir)) {
             Files.createDirectories(dataDir);
@@ -254,6 +282,7 @@ public class DailyBonusMain implements DailyBonusService, DailyBonusTimeService 
             bonusSetMap = bonusSetBuilder.orderEntriesByValue(Comparator.comparing(BonusSet::getId)).build();
             displaySettingsMap = displaySettingsBuilder.build();
         }
+        playerDataManager.onReload();
     }
 
     public Logger getLogger() {

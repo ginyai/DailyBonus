@@ -18,8 +18,8 @@ import java.util.concurrent.CompletableFuture;
 public class CycleBonusSet extends AbstractBonusSet {
     private final TimeCycle cycle;
 
-    public CycleBonusSet(DailyBonusMain dailyBonus, String id, Text display, Text extraInfo, List<BonusRequirement> bonusRequirements, List<BonusEntry> bonusEntries, TimeCycle cycle) {
-        super(dailyBonus, id, display, extraInfo, bonusRequirements, bonusEntries);
+    public CycleBonusSet(DailyBonusMain dailyBonus, String id, Text display, Text extraInfo, List<BonusRequirement> bonusRequirements, List<BonusEntry> bonusEntries, TimeCycle cycle, boolean autoComplete) {
+        super(dailyBonus, id, display, extraInfo, bonusRequirements, bonusEntries, autoComplete);
         this.cycle = cycle;
     }
 

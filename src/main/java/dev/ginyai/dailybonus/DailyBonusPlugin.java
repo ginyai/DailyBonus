@@ -84,13 +84,13 @@ public class DailyBonusPlugin {
     public void onServerStarted(GameStartedServerEvent event) {
         Task.builder().interval(1, TimeUnit.SECONDS)
             .name("DailyBonusTickTask")
-            .execute(() -> dailyBonus.getPlayerDataManager().tick())
+            .execute(dailyBonus::tick)
             .submit(this);
     }
 
     @Listener
     public void onPlayerJoin(ClientConnectionEvent.Join event) {
-        dailyBonus.getPlayerDataManager().onPlayerJoin(event.getTargetEntity());
+        dailyBonus.onPlayerJoin(event.getTargetEntity());
     }
 
     @Listener

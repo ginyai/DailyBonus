@@ -37,10 +37,11 @@ public class TypeSerializerBonusSet implements TypeSerializer<BonusSet> {
         List<BonusRequirement> requirements = node.getNode("Requirements").getList(TypeToken.of(BonusRequirement.class));
         List<BonusEntry> entries = node.getNode("Entries").getList(TypeToken.of(BonusEntry.class));
         TimeCycle cycle = node.getNode("Cycle").getValue(TypeToken.of(TimeCycle.class), TimeCycle.ONCE);
+        boolean autoComplete = node.getNode("AutoComplete").getBoolean(false);
         if (cycle == TimeCycle.ONCE) {
-            return new OnceBonusSet(dailyBonus, id, display, extra, requirements, entries);
+            return new OnceBonusSet(dailyBonus, id, display, extra, requirements, entries, autoComplete);
         } else {
-            return new CycleBonusSet(dailyBonus, id, display, extra, requirements, entries, cycle);
+            return new CycleBonusSet(dailyBonus, id, display, extra, requirements, entries, cycle, autoComplete);
         }
     }
 

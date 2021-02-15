@@ -21,14 +21,16 @@ public abstract class AbstractBonusSet implements BonusSet {
     private Text extraInfo;
     private List<BonusRequirement> requirements;
     private List<BonusEntry> entries;
+    private boolean autoComplete;
 
-    protected AbstractBonusSet(DailyBonusMain dailyBonus, String id, Text display, @Nullable Text extraInfo, List<BonusRequirement> requirements, List<BonusEntry> entries) {
+    protected AbstractBonusSet(DailyBonusMain dailyBonus, String id, Text display, @Nullable Text extraInfo, List<BonusRequirement> requirements, List<BonusEntry> entries, boolean autoComplete) {
         this.dailyBonus = dailyBonus;
         this.id = id;
         this.display = display;
         this.extraInfo = extraInfo;
         this.requirements = requirements;
         this.entries = entries;
+        this.autoComplete = autoComplete;
     }
 
     @Override
@@ -77,5 +79,9 @@ public abstract class AbstractBonusSet implements BonusSet {
         entries.forEach(e -> e.give(player));
         //todo:
         return new SimpleBonusGiveResult(true, null);
+    }
+
+    public boolean isAutoComplete() {
+        return autoComplete;
     }
 }

@@ -8,8 +8,4 @@ public interface PlayerDataManager {
     PlayerData getOrCreatePlayerData(Player player);
 
     CompletableFuture<? extends PlayerData> updatePlayerData(Player player);
-
-    void onPlayerJoin(Player player);
-
-    void onPlayerLeave(Player player);
 }

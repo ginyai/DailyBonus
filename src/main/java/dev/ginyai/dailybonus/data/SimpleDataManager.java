@@ -72,25 +72,30 @@ public class SimpleDataManager implements PlayerDataManager {
         loadedData.values().forEach(TrackedPlayer::tick);
     }
 
-    @Override
-    public void onPlayerJoin(Player player) {
-        updatePlayerData(player);
+    public CompletableFuture<TrackedPlayer> onPlayerJoin(Player player) {
+        return updatePlayerData(player);
     }
 
-    @Override
-    public void onPlayerLeave(Player player) {
+    public CompletableFuture<Void> onPlayerLeave(Player player) {
         TrackedPlayer trackedPlayer = loadedData.remove(player.getUniqueId());
         if (trackedPlayer != null) {
-            CompletableFuture.runAsync(() -> savePlayerData(trackedPlayer))
+            return CompletableFuture.runAsync(() -> savePlayerData(trackedPlayer))
                 .whenComplete((aVoid, throwable) -> {
                     if (throwable != null) {
                         dailyBonus.getLogger().error("Failed to save player online time data.", throwable);
                     }
                 });
+        } else {
+            return CompletableFuture.completedFuture(null);
         }
     }
 
     public void onClose() {
         loadedData.values().forEach(this::savePlayerData);
+    }
+
+    public void onReload() {
+        loadedData.clear();
+        Sponge.getServer().getOnlinePlayers().forEach(this::onPlayerJoin);
     }
 }

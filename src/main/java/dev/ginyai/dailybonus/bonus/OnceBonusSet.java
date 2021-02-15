@@ -11,8 +11,8 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class OnceBonusSet extends AbstractBonusSet {
-    public OnceBonusSet(DailyBonusMain dailyBonus, String id, Text display, Text extraInfo, List<BonusRequirement> bonusRequirements, List<BonusEntry> bonusEntries) {
-        super(dailyBonus, id, display, extraInfo, bonusRequirements, bonusEntries);
+    public OnceBonusSet(DailyBonusMain dailyBonus, String id, Text display, Text extraInfo, List<BonusRequirement> bonusRequirements, List<BonusEntry> bonusEntries, boolean autoComplete) {
+        super(dailyBonus, id, display, extraInfo, bonusRequirements, bonusEntries, autoComplete);
     }
 
     @Override
