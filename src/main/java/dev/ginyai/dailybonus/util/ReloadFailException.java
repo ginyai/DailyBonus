@@ -46,22 +46,18 @@ public class ReloadFailException extends Exception {
 
     private static String getMsg(boolean terminated, int errorsCount, int warningsCount) {
         if (terminated) {
-            return TextSerializers.LEGACY_FORMATTING_CODE.serialize(
-                DailyBonusPlugin.getInstance().getDailyBonus()
-                    .getI18n().translateToLocal("loading.terminated", ImmutableMap.of(
-                        "error", errorsCount,
-                        "warn", warningsCount
-                    ))
-            ) + "§r";
-//            return String.format("Unable to complain config loading. %d Error(s), %d Warning(s)", errorsCount, warningsCount);
-        } else {
-            return TextSerializers.LEGACY_FORMATTING_CODE.serialize(
-                DailyBonusPlugin.getInstance().getDailyBonus()
-                    .getI18n().translateToLocal("loading.error", ImmutableMap.of(
+            return DailyBonusPlugin.getInstance().getDailyBonus()
+                .getI18n().translateToLocal("loading.terminated", ImmutableMap.of(
                     "error", errorsCount,
                     "warn", warningsCount
-                ))
-            ) + "§r";
+                )).toPlain();
+//            return String.format("Unable to complain config loading. %d Error(s), %d Warning(s)", errorsCount, warningsCount);
+        } else {
+            return DailyBonusPlugin.getInstance().getDailyBonus()
+                .getI18n().translateToLocal("loading.error", ImmutableMap.of(
+                "error", errorsCount,
+                "warn", warningsCount
+            )).toPlain();
 //            return String.format("Config loaded, but several issues happened. %d Error(s), %d Warning(s)", errorsCount, warningsCount);
         }
     }

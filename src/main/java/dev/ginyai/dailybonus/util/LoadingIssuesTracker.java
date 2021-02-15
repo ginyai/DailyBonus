@@ -38,14 +38,12 @@ public class LoadingIssuesTracker implements AutoCloseable {
     }
 
     public void error(String msg, Throwable e) {
-        dailyBonus.getLogger().error(msg);
-        e.printStackTrace();
+        dailyBonus.getLogger().error(msg, e);
         addEntry(new IssueEntry(Level.SEVERE, msg, e));
     }
 
     public void warning(String msg, Throwable e) {
-        dailyBonus.getLogger().warn(msg);
-        e.printStackTrace();
+        dailyBonus.getLogger().warn(msg, e);
         addEntry(new IssueEntry(Level.WARNING, msg, e));
     }
 

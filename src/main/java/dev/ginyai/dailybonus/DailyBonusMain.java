@@ -276,7 +276,7 @@ public class DailyBonusMain implements DailyBonusService, DailyBonusTimeService 
                     Path dirPath = Paths.get(dirString.replace("%data_dir%", dataDir.toString()));
                     ConfigLoadingTracker.INSTANCE.loadDir(dirPath);
                     if (!Files.exists(dirPath)) {
-                        if (dirPath.toRealPath().startsWith(dataDir.toRealPath())) {
+                        if (dirPath.toAbsolutePath().startsWith(dataDir.toAbsolutePath())) {
                             Files.createDirectories(dirPath);
                         } else {
                             continue;
