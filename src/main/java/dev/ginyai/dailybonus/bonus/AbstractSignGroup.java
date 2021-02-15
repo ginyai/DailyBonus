@@ -81,6 +81,7 @@ public abstract class AbstractSignGroup implements SignGroup {
     public boolean sign_(Player player, LocalDate date) {
         UUID uuid = player.getUniqueId();
         dailyBonus.getStorage().punch(dataId, uuid, date, Instant.now());
+        dailyBonus.getPlayerDataManager().updatePlayerData(player);
         return true;
     }
 
