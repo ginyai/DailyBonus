@@ -288,7 +288,7 @@ public class DailyBonusMain implements DailyBonusService, DailyBonusTimeService 
                         }
                     }
                     Files.walk(dirPath, 1)
-                        .filter(path -> path.getFileName().toString().toLowerCase(Locale.ROOT).startsWith(".conf"))
+                        .filter(path -> path.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".conf"))
                         .forEach(path -> {
                             try {
                                 ConfigLoadingTracker.INSTANCE.loadFile(path);
@@ -318,14 +318,10 @@ public class DailyBonusMain implements DailyBonusService, DailyBonusTimeService 
                     Path dirPath = Paths.get(dirString.replace("%data_dir%", dataDir.toString()));
                     ConfigLoadingTracker.INSTANCE.loadDir(dirPath);
                     if (!Files.exists(dirPath)) {
-                        if (dirPath.toRealPath().startsWith(dataDir.toRealPath())) {
-                            Files.createDirectories(dirPath);
-                        } else {
-                            continue;
-                        }
+                        continue;
                     }
                     Files.walk(dirPath, 1)
-                        .filter(path -> path.getFileName().toString().toLowerCase(Locale.ROOT).startsWith(".conf"))
+                        .filter(path -> path.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".conf"))
                         .forEach(path -> {
                             try {
                                 ConfigLoadingTracker.INSTANCE.loadFile(path);
@@ -355,14 +351,10 @@ public class DailyBonusMain implements DailyBonusService, DailyBonusTimeService 
                     Path dirPath = Paths.get(dirString.replace("%data_dir%", dataDir.toString()));
                     ConfigLoadingTracker.INSTANCE.loadDir(dirPath);
                     if (!Files.exists(dirPath)) {
-                        if (dirPath.toRealPath().startsWith(dataDir.toRealPath())) {
-                            Files.createDirectories(dirPath);
-                        } else {
-                            continue;
-                        }
+                        continue;
                     }
                     Files.walk(dirPath, 1)
-                        .filter(path -> path.getFileName().toString().toLowerCase(Locale.ROOT).startsWith(".conf"))
+                        .filter(path -> path.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".conf"))
                         .forEach(path -> {
                             try {
                                 ConfigLoadingTracker.INSTANCE.loadFile(path);
