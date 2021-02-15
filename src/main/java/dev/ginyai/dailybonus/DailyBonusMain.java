@@ -387,7 +387,9 @@ public class DailyBonusMain implements DailyBonusService, DailyBonusTimeService 
                 }
             }
             displaySettingsMap = displaySettingsBuilder.build();
-            Compacts.init(this, tracker);
+            if (init) {
+                Compacts.init(this, tracker);
+            }
             Compacts.reload(this, tracker);
             try {
                 playerDataManager.onReload();

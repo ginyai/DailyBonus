@@ -1,5 +1,6 @@
 package dev.ginyai.dailybonus.i18n;
 
+import com.google.common.collect.ImmutableMap;
 import dev.ginyai.dailybonus.DailyBonusMain;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
@@ -80,8 +81,13 @@ public final class I18n<Text> {
     public Text translateToLocal(String key, Map<String, ?> args) {
         String s = rawMessageGetter.apply(key);
         if (s == null) {
+            s = Optional.ofNullable(rawMessageGetter.apply("i18n.key_missing"))
+                .orElse("Missing translate key: %key%, args: %arg%");
+            args = ImmutableMap.of(
+                "key", key,
+                "args", String.valueOf(args)
+            );
             dailyBonus.getLogger().warn("Unable to find msg for key: {}", key);
-            s = key;
         }
         return replacePlaceholders(s, args);
     }
