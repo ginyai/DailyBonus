@@ -28,6 +28,7 @@ import dev.ginyai.dailybonus.command.CommandOpen;
 import dev.ginyai.dailybonus.command.CommandReload;
 import dev.ginyai.dailybonus.command.CommandSign;
 import dev.ginyai.dailybonus.command.TreeCommand;
+import dev.ginyai.dailybonus.compact.Compacts;
 import dev.ginyai.dailybonus.config.ChestViewDisplaySettings;
 import dev.ginyai.dailybonus.config.ConfigLoadingTracker;
 import dev.ginyai.dailybonus.config.GeneralSettings;
@@ -186,7 +187,7 @@ public class DailyBonusMain implements DailyBonusService, DailyBonusTimeService 
         logger.debug("onInit");
         try {
             logger.info("Loading config...");
-            reload();
+            reload(true);
             logger.info("Config Loaded.");
         } catch (Exception e) {
             getLogger().error("Exception on load config.", e);
@@ -239,7 +240,11 @@ public class DailyBonusMain implements DailyBonusService, DailyBonusTimeService 
         bonusSet.give(player);
     }
 
-    public void reload() throws ReloadFailException {
+    public void reload() throws Exception {
+        reload(false);
+    }
+
+    public void reload(boolean init) throws Exception {
         LoadingIssuesTracker tracker1 = new LoadingIssuesTracker(this);
         try (LoadingIssuesTracker tracker = tracker1) {
             try {
@@ -382,6 +387,8 @@ public class DailyBonusMain implements DailyBonusService, DailyBonusTimeService 
                 }
             }
             displaySettingsMap = displaySettingsBuilder.build();
+            Compacts.init(this, tracker);
+            Compacts.reload(this, tracker);
             try {
                 playerDataManager.onReload();
             } catch (Exception e) {

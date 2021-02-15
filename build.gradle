@@ -11,10 +11,15 @@ group= "dev.ginyai"
 repositories {
     mavenCentral()
     mavenLocal()
+    maven {
+        name = 'jitpack'
+        url = 'https://jitpack.io'
+    }
 }
 
 dependencies {
     compile 'org.spongepowered:spongeapi:7.2.0'
+    compile 'com.github.rojo8399:PlaceholderAPI:master-SNAPSHOT'
 }
 
 blossom {

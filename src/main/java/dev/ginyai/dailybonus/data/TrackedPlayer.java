@@ -11,6 +11,7 @@ import dev.ginyai.dailybonus.placeholder.SignGroupValueContainer;
 import dev.ginyai.dailybonus.placeholder.TimeValueParser;
 import dev.ginyai.dailybonus.placeholder.WarpedParer;
 import dev.ginyai.dailybonus.util.UtilMethods;
+import me.rojo8399.placeholderapi.PlaceholderService;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
 
@@ -94,6 +95,7 @@ public class TrackedPlayer extends PlayerData {
                 return totalParser.parsePlaceholder(Arrays.copyOfRange(args, 1, args.length));
             case "bonusset":
                 if (args.length >= 2) {
+                    // TODO: 2021/2/15 handle '_' in id
                     BonusSet bonusSet = dailyBonus.getBonusSetById(args[1]).orElse(null);
                     if (bonusSet != null) {
                         return bonusSetValueMap.computeIfAbsent(bonusSet, s -> new BonusSetValueContainer(this, s))
@@ -103,6 +105,7 @@ public class TrackedPlayer extends PlayerData {
                 break;
             case "signgroup":
                 if (args.length >= 2) {
+                    // TODO: 2021/2/15 handle '_' in id
                     SignGroup signGroup = dailyBonus.getSignGroupById(args[1]).orElse(null);
                     if (signGroup != null) {
                         return signGroupValueMap.computeIfAbsent(signGroup, s -> new SignGroupValueContainer(this, s))
@@ -112,8 +115,16 @@ public class TrackedPlayer extends PlayerData {
                 break;
 
         }
-        //todo:
-        return null;
+        Object result = null;
+        Player player = getPlayer().orElse(null);
+        if (player != null) {
+            if (Sponge.getPluginManager().isLoaded("placeholderapi")) {
+                result = Sponge.getServiceManager().provideUnchecked(PlaceholderService.class)
+                    .parse(String.join(" ", args), player, null);
+            }
+        }
+        //todo: nucleus | sponge api
+        return result;
     }
 
     @Override
