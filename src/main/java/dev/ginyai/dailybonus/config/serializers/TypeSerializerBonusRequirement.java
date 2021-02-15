@@ -12,17 +12,17 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class TypeSerializerBonusRequirement implements TypeSerializer<BonusRequirement> {
-    private BonusRequirements bonusEntries;
+    private BonusRequirements bonusRequirements;
 
-    public TypeSerializerBonusRequirement(BonusRequirements bonusEntries) {
-        this.bonusEntries = bonusEntries;
+    public TypeSerializerBonusRequirement(BonusRequirements bonusRequirements) {
+        this.bonusRequirements = bonusRequirements;
     }
 
     @Nullable
     @Override
     public BonusRequirement deserialize(@NonNull TypeToken<?> type, @NonNull ConfigurationNode node) throws ObjectMappingException {
         String typeString = ConfigUtils.readNonnull(node.getNode("Type"), ConfigurationNode::getString);
-        ConfigDeserializer<BonusRequirement> deserializer = bonusEntries.getDeserializer(typeString).orElseThrow(() -> new ObjectMappingException("Unsupported bonus entry type: " + typeString));
+        ConfigDeserializer<BonusRequirement> deserializer = bonusRequirements.getDeserializer(typeString).orElseThrow(() -> new ObjectMappingException("Unsupported bonus entry type: " + typeString));
         return deserializer.deserialize(node);
     }
 

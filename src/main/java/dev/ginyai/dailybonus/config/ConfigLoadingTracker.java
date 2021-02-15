@@ -40,4 +40,11 @@ public class ConfigLoadingTracker {
         return s.substring(0, s.length() - 5);
     }
 
+    public String addPrefix(String s) {
+        if (!s.contains(".")) {
+            return getCurPrefix() + "." + s;
+        } else {
+            return s;
+        }
+    }
 }

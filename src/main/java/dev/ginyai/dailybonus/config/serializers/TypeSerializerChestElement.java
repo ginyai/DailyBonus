@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
 import dev.ginyai.dailybonus.DailyBonusMain;
 import dev.ginyai.dailybonus.api.bonus.BonusSet;
+import dev.ginyai.dailybonus.config.ConfigLoadingTracker;
 import dev.ginyai.dailybonus.util.ConfigUtils;
 import dev.ginyai.dailybonus.view.chest.ChestElement;
 import dev.ginyai.dailybonus.view.chest.ChestElementBonus;
@@ -42,7 +43,7 @@ public class TypeSerializerChestElement implements TypeSerializer<ChestElement> 
                 return new ChestElementFixed(dailyBonus, readItem(node.getNode("Item")));
             case "bonus":
                 String bonusSetString = ConfigUtils.readNonnull(node.getNode("BonusSet"), ConfigurationNode::getString);
-                BonusSet bonusSet = dailyBonus.getBonusSetById(bonusSetString).orElseThrow(() -> new ObjectMappingException("Unable to find bonus with id " + bonusSetString));
+                BonusSet bonusSet = dailyBonus.getBonusSetById(ConfigLoadingTracker.INSTANCE.addPrefix(bonusSetString)).orElseThrow(() -> new ObjectMappingException("Unable to find bonus with id " + bonusSetString));
                 return new ChestElementBonus(dailyBonus, bonusSet, readItem(node.getNode("ItemReceived")), readItem(node.getNode("ItemUsable")), readItem(node.getNode("ItemUnusable")));
             default:
                 throw new ObjectMappingException("Unsupported ChestElement Type: " + typeString);

@@ -150,20 +150,20 @@ public class DailyBonusMain implements DailyBonusService, DailyBonusTimeService 
         options = options.setSerializers(serializerCollection);
 
         //todo: api ?
-        bonusEntries.registry("command", node -> new BonusEntryCommands(this, node.getNode("commands").getList(TypeToken.of(String.class))));
-        bonusEntries.registry("sign", node -> new BonusEntrySign(Objects.requireNonNull(signGroupMap.get(ConfigUtils.readNonnull(node.getNode("sign-group"), ConfigurationNode::getString)))));
+        bonusEntries.registry("command", node -> new BonusEntryCommands(this, node.getNode("Commands").getList(TypeToken.of(String.class))));
+        bonusEntries.registry("sign", node -> new BonusEntrySign(requireSignGroup(ConfigLoadingTracker.INSTANCE.addPrefix(ConfigUtils.readNonnull(node.getNode("SignGroup"), ConfigurationNode::getString)))));
 
         //todo: api ?
         bonusRequirements.registry("onlinetimetoday", node -> new BonusRequirementOnlineTimeToday(this, ConfigUtils.readNonnull(node.getNode("online-time"), ConfigUtils::readTimespan)));
         bonusRequirements.registry("onlinetimetotal", node -> new BonusRequirementOnlineTimeTotal(this, ConfigUtils.readNonnull(node.getNode("online-time"), ConfigUtils::readTimespan)));
         bonusRequirements.registry("signcount", node -> new BonusRequirementSignCount(this,
-            Objects.requireNonNull(signGroupMap.get(ConfigUtils.readNonnull(node.getNode("sign-group"), ConfigurationNode::getString))),
-            ConfigUtils.readNonnull(node.getNode("count"), ConfigurationNode::getInt)
+            requireSignGroup(ConfigLoadingTracker.INSTANCE.addPrefix(ConfigUtils.readNonnull(node.getNode("SignGroup"), ConfigurationNode::getString))),
+            ConfigUtils.readNonnull(node.getNode("Count"), ConfigurationNode::getInt)
         ));
         bonusRequirements.registry("permission", node -> new BonusRequirementPermission(this,
-            ConfigUtils.readNonnull(node.getNode("permission"), ConfigurationNode::getString),
+            ConfigUtils.readNonnull(node.getNode("Permission"), ConfigurationNode::getString),
             //todo: use text parser ?
-            ConfigUtils.readNonnull(node.getNode("display"), n -> n.getValue(TypeToken.of(Text.class)))
+            ConfigUtils.readNonnull(node.getNode("Display"), n -> n.getValue(TypeToken.of(Text.class)))
         ));
 
         rootCommand = new TreeCommand("root", this);
@@ -173,6 +173,10 @@ public class DailyBonusMain implements DailyBonusService, DailyBonusTimeService 
         rootCommand.addChild(new CommandSign(this));
         rootCommand.addChild(new CommandBonus(this));
         rootCommand.addChild(new CommandListParms(this));
+    }
+
+    public SignGroup requireSignGroup(String id) {
+        return Objects.requireNonNull(signGroupMap.get(id), "Unable to fin sign group with id: " + id);
     }
 
     public void onInit() {
@@ -252,10 +256,8 @@ public class DailyBonusMain implements DailyBonusService, DailyBonusTimeService 
             generalConfigLoader.save(rootNode);
         }
 
+        //sign groups
         ImmutableMap.Builder<String, SignGroup> signGroupBuilder = ImmutableMap.builder();
-        ImmutableMap.Builder<String, BonusSet> bonusSetBuilder = ImmutableMap.builder();
-        ImmutableMap.Builder<String, ChestViewDisplaySettings> displaySettingsBuilder = ImmutableMap.builder();
-
         for (String dirString: generalSettings.getSettingsDir()) {
             try {
                 Path dirPath = Paths.get(dirString.replace("%data_dir%", dataDir.toString()));
@@ -276,9 +278,66 @@ public class DailyBonusMain implements DailyBonusService, DailyBonusTimeService 
                             ConfigurationNode node = loader1.load(options);
                             List<SignGroup> signGroupList = node.getNode("DailyBonus", "SignGroup").getList(TypeToken.of(SignGroup.class));
                             signGroupList.forEach(signGroup -> signGroupBuilder.put(signGroup.getId(), signGroup));
+                        } catch (Exception e) {
+                            logger.error("Exception on loading config file : " + path, e);
+                        }
+                    });
+            } catch (Exception e) {
+                logger.error("Exception on loading configs in dir: " + dirString, e);
+            }
+        }
+        signGroupMap = signGroupBuilder.orderEntriesByValue(Comparator.comparing(SignGroup::getId)).build();
+        //bonus set
+        ImmutableMap.Builder<String, BonusSet> bonusSetBuilder = ImmutableMap.builder();
+        for (String dirString: generalSettings.getSettingsDir()) {
+            try {
+                Path dirPath = Paths.get(dirString.replace("%data_dir%", dataDir.toString()));
+                ConfigLoadingTracker.INSTANCE.loadDir(dirPath);
+                if (!Files.exists(dirPath)) {
+                    if (dirPath.toRealPath().startsWith(dataDir.toRealPath())) {
+                        Files.createDirectories(dirPath);
+                    } else {
+                        continue;
+                    }
+                }
+                Files.walk(dirPath, 1)
+                    .filter(path -> path.getFileName().toString().toLowerCase(Locale.ROOT).startsWith(".conf"))
+                    .forEach(path -> {
+                        try {
+                            ConfigLoadingTracker.INSTANCE.loadFile(path);
+                            ConfigurationLoader<CommentedConfigurationNode> loader1 = HoconConfigurationLoader.builder().setPath(path).build();
+                            ConfigurationNode node = loader1.load(options);
                             List<BonusSet> bonusSetList = node.getNode("DailyBonus", "BonusSet").getList(TypeToken.of(BonusSet.class));
                             bonusSetList.forEach(bonusSet -> bonusSetBuilder.put(bonusSet.getId(), bonusSet));
-                            bonusSetMap = bonusSetList.stream().collect(ImmutableMap.toImmutableMap(BonusSet::getId, Function.identity()));
+                        } catch (Exception e) {
+                            logger.error("Exception on loading config file : " + path, e);
+                        }
+                    });
+            } catch (Exception e) {
+                logger.error("Exception on loading configs in dir: " + dirString, e);
+            }
+        }
+        bonusSetMap = bonusSetBuilder.orderEntriesByValue(Comparator.comparing(BonusSet::getId)).build();
+        //display settings
+        ImmutableMap.Builder<String, ChestViewDisplaySettings> displaySettingsBuilder = ImmutableMap.builder();
+        for (String dirString: generalSettings.getSettingsDir()) {
+            try {
+                Path dirPath = Paths.get(dirString.replace("%data_dir%", dataDir.toString()));
+                ConfigLoadingTracker.INSTANCE.loadDir(dirPath);
+                if (!Files.exists(dirPath)) {
+                    if (dirPath.toRealPath().startsWith(dataDir.toRealPath())) {
+                        Files.createDirectories(dirPath);
+                    } else {
+                        continue;
+                    }
+                }
+                Files.walk(dirPath, 1)
+                    .filter(path -> path.getFileName().toString().toLowerCase(Locale.ROOT).startsWith(".conf"))
+                    .forEach(path -> {
+                        try {
+                            ConfigLoadingTracker.INSTANCE.loadFile(path);
+                            ConfigurationLoader<CommentedConfigurationNode> loader1 = HoconConfigurationLoader.builder().setPath(path).build();
+                            ConfigurationNode node = loader1.load(options);
                             Map<String, ChestViewDisplaySettings> displaySettingsMap = ConfigUtils.readMap(node.getNode("DailyBonus", "ChestView"), node1 -> node1.getValue(TypeToken.of(ChestViewDisplaySettings.class)));
                             displaySettingsMap.forEach((name, settings) -> {
                                 displaySettingsBuilder.put(ConfigLoadingTracker.INSTANCE.getCurPrefix() + "." +name, settings);
@@ -290,10 +349,8 @@ public class DailyBonusMain implements DailyBonusService, DailyBonusTimeService 
             } catch (Exception e) {
                 logger.error("Exception on loading configs in dir: " + dirString, e);
             }
-            signGroupMap = signGroupBuilder.orderEntriesByValue(Comparator.comparing(SignGroup::getId)).build();
-            bonusSetMap = bonusSetBuilder.orderEntriesByValue(Comparator.comparing(BonusSet::getId)).build();
-            displaySettingsMap = displaySettingsBuilder.build();
         }
+        displaySettingsMap = displaySettingsBuilder.build();
         playerDataManager.onReload();
     }
 
