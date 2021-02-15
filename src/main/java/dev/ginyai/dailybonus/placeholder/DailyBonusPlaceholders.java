@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 public class DailyBonusPlaceholders {
 
 
-    protected static Pattern PLACEHOLDER_PATTERN = Pattern.compile("%([0-9a-zA-Z_-]+)%");
+    protected static Pattern PLACEHOLDER_PATTERN = Pattern.compile("%([0-9a-zA-Z._-]+)%");
 
     private final DailyBonusMain dailyBonus;
 

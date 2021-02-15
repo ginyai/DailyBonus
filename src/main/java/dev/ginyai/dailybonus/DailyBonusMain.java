@@ -158,8 +158,8 @@ public class DailyBonusMain implements DailyBonusService, DailyBonusTimeService 
         bonusEntries.registry("sign", node -> new BonusEntrySign(requireSignGroup(ConfigLoadingTracker.INSTANCE.addPrefix(ConfigUtils.readNonnull(node.getNode("SignGroup"), ConfigurationNode::getString)))));
 
         //todo: api ?
-        bonusRequirements.registry("onlinetimetoday", node -> new BonusRequirementOnlineTimeToday(this, ConfigUtils.readNonnull(node.getNode("online-time"), ConfigUtils::readTimespan)));
-        bonusRequirements.registry("onlinetimetotal", node -> new BonusRequirementOnlineTimeTotal(this, ConfigUtils.readNonnull(node.getNode("online-time"), ConfigUtils::readTimespan)));
+        bonusRequirements.registry("onlinetimetoday", node -> new BonusRequirementOnlineTimeToday(this, ConfigUtils.readNonnull(node.getNode("OnlineTime"), ConfigUtils::readTimespan)));
+        bonusRequirements.registry("onlinetimetotal", node -> new BonusRequirementOnlineTimeTotal(this, ConfigUtils.readNonnull(node.getNode("OnlineTime"), ConfigUtils::readTimespan)));
         bonusRequirements.registry("signcount", node -> new BonusRequirementSignCount(this,
             requireSignGroup(ConfigLoadingTracker.INSTANCE.addPrefix(ConfigUtils.readNonnull(node.getNode("SignGroup"), ConfigurationNode::getString))),
             ConfigUtils.readNonnull(node.getNode("Count"), ConfigurationNode::getInt)
@@ -296,7 +296,6 @@ public class DailyBonusMain implements DailyBonusService, DailyBonusTimeService 
                                 for (ConfigurationNode node: root.getNode("DailyBonus", "SignGroup").getChildrenList()) {
                                     try {
                                         SignGroup signGroup = node.getValue(TypeToken.of(SignGroup.class));
-                                        //noinspection ConstantConditions
                                         signGroupBuilder.put(signGroup.getId(), signGroup);
                                     } catch (Exception e) {
                                         tracker.error("Exception on loading sign group from file:" + path + ", node: " + ConfigUtils.toString(node), e);
@@ -326,10 +325,9 @@ public class DailyBonusMain implements DailyBonusService, DailyBonusTimeService 
                             try {
                                 ConfigLoadingTracker.INSTANCE.loadFile(path);
                                 ConfigurationNode root = HoconConfigurationLoader.builder().setPath(path).build().load(options);
-                                for (ConfigurationNode node: root.getNode("DailyBonus", "SignGroup").getChildrenList()) {
+                                for (ConfigurationNode node: root.getNode("DailyBonus", "BonusSet").getChildrenList()) {
                                     try {
                                         BonusSet bonusSet = node.getValue(TypeToken.of(BonusSet.class));
-                                        //noinspection ConstantConditions
                                         bonusSetBuilder.put(bonusSet.getId(), bonusSet);
                                     } catch (Exception e) {
                                         tracker.error("Exception on loading bonus set from file:" + path + ", node: " + ConfigUtils.toString(node), e);
@@ -361,7 +359,6 @@ public class DailyBonusMain implements DailyBonusService, DailyBonusTimeService 
                                 ConfigurationNode root = HoconConfigurationLoader.builder().setPath(path).build().load(options);
                                 for (Map.Entry<Object, ? extends ConfigurationNode> entry: root.getNode("DailyBonus", "ChestView").getChildrenMap().entrySet()) {
                                     try {
-                                        //noinspection ConstantConditions
                                         displaySettingsBuilder.put(
                                             ConfigLoadingTracker.INSTANCE.getCurPrefix() + "." + entry.getKey().toString(),
                                             entry.getValue().getValue(TypeToken.of(ChestViewDisplaySettings.class))

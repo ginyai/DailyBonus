@@ -97,6 +97,6 @@ public abstract class AbstractSignGroup implements SignGroup {
     public int count_(Player player) {
         TimeRange<LocalDateTime> timeRange = getActiveTime();
         return dailyBonus.getStorage()
-            .countPunchPoints(getId(), player.getUniqueId(), timeRange.getStart().toLocalDate(), timeRange.getEnd().toLocalDate());
+            .countPunchPoints(dataId, player.getUniqueId(), timeRange.getStart().toLocalDate(), timeRange.getEnd().toLocalDate());
     }
 }

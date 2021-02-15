@@ -42,7 +42,7 @@ public class TypeSerializerChestElement implements TypeSerializer<ChestElement> 
             case "fixed":
                 return new ChestElementFixed(dailyBonus, readItem(node.getNode("Item")));
             case "bonus":
-                String bonusSetString = ConfigUtils.readNonnull(node.getNode("BonusSet"), ConfigurationNode::getString);
+                String bonusSetString = ConfigLoadingTracker.INSTANCE.addPrefix(ConfigUtils.readNonnull(node.getNode("BonusSet"), ConfigurationNode::getString));
                 BonusSet bonusSet = dailyBonus.getBonusSetById(ConfigLoadingTracker.INSTANCE.addPrefix(bonusSetString)).orElseThrow(() -> new ObjectMappingException("Unable to find bonus with id " + bonusSetString));
                 return new ChestElementBonus(dailyBonus, bonusSet, readItem(node.getNode("ItemReceived")), readItem(node.getNode("ItemUsable")), readItem(node.getNode("ItemUnusable")));
             default:
