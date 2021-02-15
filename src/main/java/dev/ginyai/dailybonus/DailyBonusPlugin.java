@@ -29,8 +29,7 @@ public class DailyBonusPlugin {
     public static final String PLUGIN_ID = "dailybonus";
     public static final String NAME = "DailyBonus";
     public static final String VERSION = "@version@";
-    //todo: description
-    public static final String DESCRIPTION = "*DESCRIPTION*";
+    public static final String DESCRIPTION = "DailyBonusPlugin";
 
     @Inject
     @ConfigDir(sharedRoot = true)
