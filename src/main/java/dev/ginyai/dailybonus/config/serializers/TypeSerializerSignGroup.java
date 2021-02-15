@@ -7,6 +7,7 @@ import dev.ginyai.dailybonus.api.time.TimeRange;
 import dev.ginyai.dailybonus.DailyBonusMain;
 import dev.ginyai.dailybonus.bonus.CycleSignGroup;
 import dev.ginyai.dailybonus.bonus.OnceSignGroup;
+import dev.ginyai.dailybonus.config.ConfigLoadingTracker;
 import dev.ginyai.dailybonus.util.ConfigUtils;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
@@ -28,16 +29,17 @@ public class TypeSerializerSignGroup implements TypeSerializer<SignGroup> {
     @Nullable
     @Override
     public SignGroup deserialize(@NonNull TypeToken<?> type, @NonNull ConfigurationNode node) throws ObjectMappingException {
-        String id = ConfigUtils.readNonnull(node.getNode("Id"), ConfigurationNode::getString);
+        String id = ConfigLoadingTracker.INSTANCE.getCurPrefix() + "." + ConfigUtils.readNonnull(node.getNode("Id"), ConfigurationNode::getString);
+        String dataId = node.getNode("DataId").getString(id);
         //todo: use text parser
         Text display = ConfigUtils.readNonnull(node.getNode("Display"), n -> n.getValue(TypeTokens.TEXT_TOKEN));
         TimeCycle cycle = ConfigUtils.readNonnull(node.getNode("Cycle"), n -> n.getValue(TypeToken.of(TimeCycle.class)));
         if (cycle == TimeCycle.ONCE) {
             LocalDateTime start = LocalDateTime.parse(ConfigUtils.readNonnull(node.getNode("Start"), ConfigurationNode::getString));
             LocalDateTime end = LocalDateTime.parse(ConfigUtils.readNonnull(node.getNode("End"), ConfigurationNode::getString));
-            return new OnceSignGroup(dailyBonus, id, display, new TimeRange<>(start, end));
+            return new OnceSignGroup(dailyBonus, id, dataId, display, new TimeRange<>(start, end));
         } else {
-            return new CycleSignGroup(dailyBonus, id, display, cycle);
+            return new CycleSignGroup(dailyBonus, id, dataId, display, cycle);
         }
     }
 

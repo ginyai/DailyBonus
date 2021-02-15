@@ -9,8 +9,8 @@ import java.time.LocalDateTime;
 public class OnceSignGroup extends AbstractSignGroup {
     private final TimeRange<LocalDateTime> timeRange;
 
-    public OnceSignGroup(DailyBonusMain dailyBonus, String id, Text display, TimeRange<LocalDateTime> timeRange) {
-        super(dailyBonus, id, display);
+    public OnceSignGroup(DailyBonusMain dailyBonus, String id, String dataId, Text display, TimeRange<LocalDateTime> timeRange) {
+        super(dailyBonus, id, dataId, display);
         this.timeRange = timeRange;
     }
 

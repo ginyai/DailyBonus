@@ -17,11 +17,13 @@ import java.util.concurrent.CompletableFuture;
 public abstract class AbstractSignGroup implements SignGroup {
     protected final DailyBonusMain dailyBonus;
     protected final String id;
+    protected final String dataId;
     protected Text display;
 
-    protected AbstractSignGroup(DailyBonusMain dailyBonus, String id, Text display) {
+    protected AbstractSignGroup(DailyBonusMain dailyBonus, String id, String dataId, Text display) {
         this.dailyBonus = dailyBonus;
         this.id = id;
+        this.dataId = dataId;
         this.display = display;
     }
 
@@ -42,7 +44,8 @@ public abstract class AbstractSignGroup implements SignGroup {
 
     @Override
     public CompletableFuture<Boolean> isSigned(Player player, LocalDate date) {
-        return null;
+        // TODO: 2021/2/15  IMPL
+        throw new UnsupportedOperationException("TODO");
     }
 
     @Override
@@ -57,7 +60,7 @@ public abstract class AbstractSignGroup implements SignGroup {
     public boolean canSignToday_(Player player) {
         DailyBonusTimeService timeService = Sponge.getServiceManager().provideUnchecked(DailyBonusTimeService.class);
         UUID uuid = player.getUniqueId();
-        return !dailyBonus.getStorage().checkPunched(id, uuid, timeService.getToday());
+        return !dailyBonus.getStorage().checkPunched(dataId, uuid, timeService.getToday());
     }
 
     @Override
@@ -77,7 +80,7 @@ public abstract class AbstractSignGroup implements SignGroup {
 
     public boolean sign_(Player player, LocalDate date) {
         UUID uuid = player.getUniqueId();
-        dailyBonus.getStorage().punch(id, uuid, date, Instant.now());
+        dailyBonus.getStorage().punch(dataId, uuid, date, Instant.now());
         return true;
     }
 

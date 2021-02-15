@@ -13,8 +13,8 @@ import java.time.LocalDateTime;
 public class CycleSignGroup extends AbstractSignGroup {
     private final TimeCycle cycle;
 
-    public CycleSignGroup(DailyBonusMain dailyBonus, String id, Text display, TimeCycle cycle) {
-        super(dailyBonus, id, display);
+    public CycleSignGroup(DailyBonusMain dailyBonus, String id, String dataId, Text display, TimeCycle cycle) {
+        super(dailyBonus, id, dataId, display);
         this.cycle = cycle;
     }
 
