@@ -9,6 +9,7 @@ import org.spongepowered.api.event.game.state.GamePostInitializationEvent;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStartedServerEvent;
 import org.spongepowered.api.event.game.state.GameStartingServerEvent;
+import org.spongepowered.api.event.game.state.GameStoppingServerEvent;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.scheduler.Task;
@@ -71,12 +72,16 @@ public class DailyBonusPlugin {
     @Listener
     public void onPostInit(GamePostInitializationEvent event) {
         dailyBonus.onPostInit();
-
     }
 
     @Listener
     public void onStartingServer(GameStartingServerEvent event) {
         Sponge.getCommandManager().register(this, dailyBonus.getRootCommand().toCallable(), "dailybonus", "sign");
+    }
+
+    @Listener
+    public void onGameStop(GameStoppingServerEvent event) {
+        dailyBonus.onClose();
     }
 
     @Listener
