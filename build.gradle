@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'idea'
     id 'org.spongepowered.plugin' version '0.9.0'
+    id "net.kyori.blossom" version "1.1.0"
 }
 
 version = "0.1.0"
@@ -14,6 +15,10 @@ repositories {
 
 dependencies {
     compile 'org.spongepowered:spongeapi:7.2.0'
+}
+
+blossom {
+    replaceToken '@version@', version, 'src/main/java/dev/ginyai/dailybonus/DailyBonusPlugin.java'
 }
 
 tasks.withType(JavaCompile) {
