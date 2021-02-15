@@ -73,7 +73,11 @@ public class SimpleDataManager implements PlayerDataManager {
     }
 
     public CompletableFuture<TrackedPlayer> onPlayerJoin(Player player) {
-        return updatePlayerData(player);
+        return updatePlayerData(player).whenComplete(((trackedPlayer, throwable) -> {
+            if (throwable != null) {
+                dailyBonus.getLogger().error("Exception on updating player data.", throwable);
+            }
+        }));
     }
 
     public CompletableFuture<Void> onPlayerLeave(Player player) {

@@ -11,6 +11,7 @@ import dev.ginyai.dailybonus.api.data.IStorage;
 import dev.ginyai.dailybonus.api.time.DailyBonusTimeService;
 import dev.ginyai.dailybonus.api.time.TimeCycle;
 import dev.ginyai.dailybonus.api.time.TimeRange;
+import dev.ginyai.dailybonus.api.time.event.DayChangeEvent;
 import dev.ginyai.dailybonus.api.view.DailyBonusViewManager;
 import dev.ginyai.dailybonus.bonus.AbstractBonusSet;
 import dev.ginyai.dailybonus.bonus.BonusEntries;
@@ -112,6 +113,8 @@ public class DailyBonusMain implements DailyBonusService, DailyBonusTimeService 
 
     private ConfigurationOptions options = ConfigurationOptions.defaults();
 
+    private LocalDate lastTickDay;
+
     public DailyBonusMain(DailyBonusPlugin plugin) {
         this.plugin = plugin;
     }
@@ -208,6 +211,15 @@ public class DailyBonusMain implements DailyBonusService, DailyBonusTimeService 
 
     public void tick() {
         playerDataManager.tick();
+        // TODO: 2021/2/15 AutoCompleteBonus Check
+        LocalDate today = getToday();
+        if (lastTickDay != null && !Objects.equals(today, lastTickDay)) {
+            lastTickDay = today;
+            playerDataManager.onReload();
+            Sponge.getEventManager().post(new DayChangeEvent(Sponge.getCauseStackManager().getCurrentCause()));
+        } else {
+            lastTickDay = today;
+        }
     }
 
     private void checkAutoComplete(AbstractBonusSet bonusSet, Player player, TrackedPlayer playerData) {
