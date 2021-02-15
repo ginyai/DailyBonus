@@ -5,6 +5,9 @@ import dev.ginyai.dailybonus.api.data.PlayerData;
 import dev.ginyai.dailybonus.api.placeholder.IPlaceholderContainer;
 import dev.ginyai.dailybonus.DailyBonusMain;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.TextRepresentable;
+import org.spongepowered.api.text.serializer.TextSerializers;
 
 import java.util.Locale;
 import java.util.Map;
@@ -19,6 +22,7 @@ public class DailyBonusPlaceholders {
 
     private final DailyBonusMain dailyBonus;
 
+    // TODO: 2021/2/15 Return Text ?
     public DailyBonusPlaceholders(DailyBonusMain dailyBonus) {
         this.dailyBonus = dailyBonus;
     }
@@ -28,8 +32,7 @@ public class DailyBonusPlaceholders {
     }
 
     public String replacePlaceholders(String sIn, IPlaceholderContainer container) {
-        //todo: better to string
-        return replacePlaceholders(sIn, key -> String.valueOf(container.parsePlaceholder(key.split("_"))));
+        return replacePlaceholders(sIn, key -> toString(container.parsePlaceholder(key.split("_"))));
     }
 
     public String replacePlaceholders(String sIn, Function<String, String> function) {
@@ -66,6 +69,16 @@ public class DailyBonusPlaceholders {
 
     public Object requestPlaceholder(String key, PlayerData playerData) {
         return playerData.parsePlaceholder(key.toLowerCase(Locale.ROOT).split("_"));
+    }
+
+    private static String toString(Object o) {
+        if (o instanceof Text) {
+            return TextSerializers.LEGACY_FORMATTING_CODE.serialize((Text) o);
+        } else if (o instanceof TextRepresentable) {
+            return TextSerializers.LEGACY_FORMATTING_CODE.serialize(((TextRepresentable) o).toText());
+        } else {
+            return String.valueOf(o);
+        }
     }
 
 }
