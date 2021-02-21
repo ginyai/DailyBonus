@@ -1,10 +1,10 @@
 package dev.ginyai.dailybonus.config.serializers;
 
 import com.google.common.reflect.TypeToken;
+import dev.ginyai.dailybonus.DailyBonusMain;
 import dev.ginyai.dailybonus.api.bonus.SignGroup;
 import dev.ginyai.dailybonus.api.time.TimeCycle;
 import dev.ginyai.dailybonus.api.time.TimeRange;
-import dev.ginyai.dailybonus.DailyBonusMain;
 import dev.ginyai.dailybonus.bonus.CycleSignGroup;
 import dev.ginyai.dailybonus.bonus.OnceSignGroup;
 import dev.ginyai.dailybonus.config.ConfigLoadingTracker;
@@ -15,7 +15,6 @@ import ninja.leaping.configurate.objectmapping.serialize.TypeSerializer;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.util.TypeTokens;
 
 import java.time.LocalDateTime;
 
@@ -31,8 +30,7 @@ public class TypeSerializerSignGroup implements TypeSerializer<SignGroup> {
     public SignGroup deserialize(@NonNull TypeToken<?> type, @NonNull ConfigurationNode node) throws ObjectMappingException {
         String id = ConfigLoadingTracker.INSTANCE.getCurPrefix() + "." + ConfigUtils.readNonnull(node.getNode("Id"), ConfigurationNode::getString);
         String dataId = node.getNode("DataId").getString(id);
-        //todo: use text parser
-        Text display = ConfigUtils.readNonnull(node.getNode("Display"), n -> n.getValue(TypeTokens.TEXT_TOKEN));
+        Text display = dailyBonus.getTextParser().apply(ConfigUtils.readNonnull(node.getNode("Display"), ConfigurationNode::getString));
         TimeCycle cycle = ConfigUtils.readNonnull(node.getNode("Cycle"), n -> n.getValue(TypeToken.of(TimeCycle.class)));
         if (cycle == TimeCycle.ONCE) {
             LocalDateTime start = LocalDateTime.parse(ConfigUtils.readNonnull(node.getNode("Start"), ConfigurationNode::getString));

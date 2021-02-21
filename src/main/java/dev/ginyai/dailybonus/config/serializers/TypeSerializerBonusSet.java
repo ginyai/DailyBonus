@@ -1,11 +1,11 @@
 package dev.ginyai.dailybonus.config.serializers;
 
 import com.google.common.reflect.TypeToken;
+import dev.ginyai.dailybonus.DailyBonusMain;
 import dev.ginyai.dailybonus.api.bonus.BonusEntry;
 import dev.ginyai.dailybonus.api.bonus.BonusRequirement;
 import dev.ginyai.dailybonus.api.bonus.BonusSet;
 import dev.ginyai.dailybonus.api.time.TimeCycle;
-import dev.ginyai.dailybonus.DailyBonusMain;
 import dev.ginyai.dailybonus.bonus.CycleBonusSet;
 import dev.ginyai.dailybonus.bonus.OnceBonusSet;
 import dev.ginyai.dailybonus.config.ConfigLoadingTracker;
@@ -16,9 +16,9 @@ import ninja.leaping.configurate.objectmapping.serialize.TypeSerializer;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.util.TypeTokens;
 
 import java.util.List;
+import java.util.Optional;
 
 public class TypeSerializerBonusSet implements TypeSerializer<BonusSet> {
     private final DailyBonusMain dailyBonus;
@@ -31,9 +31,8 @@ public class TypeSerializerBonusSet implements TypeSerializer<BonusSet> {
     @Override
     public BonusSet deserialize(@NonNull TypeToken<?> type, @NonNull ConfigurationNode node) throws ObjectMappingException {
         String id = ConfigLoadingTracker.INSTANCE.getCurPrefix() + "." + ConfigUtils.readNonnull(node.getNode("Id"), ConfigurationNode::getString);
-        //todo: use text parser
-        Text display = ConfigUtils.readNonnull(node.getNode("Display"), n -> n.getValue(TypeTokens.TEXT_TOKEN));
-        Text extra = node.getNode("ExtraInfo").getValue(TypeTokens.TEXT_TOKEN);
+        Text display = dailyBonus.getTextParser().apply(ConfigUtils.readNonnull(node.getNode("Display"), ConfigurationNode::getString));
+        Text extra = Optional.ofNullable(node.getNode("ExtraInfo").getString()).map(dailyBonus.getTextParser()).orElse(null);
         List<BonusRequirement> requirements = node.getNode("Requirements").getList(TypeToken.of(BonusRequirement.class));
         List<BonusEntry> entries = node.getNode("Entries").getList(TypeToken.of(BonusEntry.class));
         TimeCycle cycle = node.getNode("Cycle").getValue(TypeToken.of(TimeCycle.class), TimeCycle.ONCE);
