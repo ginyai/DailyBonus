@@ -47,7 +47,6 @@ import dev.ginyai.dailybonus.placeholder.DailyBonusPlaceholders;
 import dev.ginyai.dailybonus.time.SimpleTimeService;
 import dev.ginyai.dailybonus.util.ConfigUtils;
 import dev.ginyai.dailybonus.util.LoadingIssuesTracker;
-import dev.ginyai.dailybonus.util.ReloadFailException;
 import dev.ginyai.dailybonus.view.chest.ChestElement;
 import dev.ginyai.dailybonus.view.chest.ChestViewManager;
 import ninja.leaping.configurate.ConfigurationNode;
@@ -201,7 +200,7 @@ public class DailyBonusMain implements DailyBonusService, DailyBonusTimeService 
 
     public void onClose() {
         logger.debug("onClose");
-        getPlayerDataManager().onClose();
+        getPlayerDataManager().saveAll();
         storageManager.onClose();
     }
 
@@ -253,6 +252,11 @@ public class DailyBonusMain implements DailyBonusService, DailyBonusTimeService 
                 }
             } catch (IOException e) {
                 tracker.terminated("Exception on create data dir: " + dataDir, e);
+            }
+            try {
+                playerDataManager.saveAll();
+            } catch (Exception e) {
+                tracker.error("Exception on save player data.", e);
             }
             try {
                 boolean configExits = Files.exists(generalConfigPath);

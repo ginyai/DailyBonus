@@ -94,7 +94,7 @@ public class SimpleDataManager implements PlayerDataManager {
         }
     }
 
-    public void onClose() {
+    public void saveAll() {
         loadedData.values().forEach(this::savePlayerData);
     }
 
