@@ -1,5 +1,6 @@
 package dev.ginyai.dailybonus.view.chest;
 
+import com.google.common.collect.ImmutableMap;
 import dev.ginyai.dailybonus.api.data.PlayerData;
 import dev.ginyai.dailybonus.DailyBonusMain;
 import org.spongepowered.api.entity.living.player.Player;
@@ -21,7 +22,7 @@ public class ChestElementFixed extends ChestElement {
 
     @Override
     public ItemStack getDisplay(PlayerData data) {
-        return itemStackFunction.apply(s -> dailyBonus.getPlaceholders().replacePlaceholders(s, data));
+        return itemStackFunction.apply(s -> dailyBonus.getPlaceholders().replacePlaceholders(s, ImmutableMap.of("player", data)));
     }
 
     @Override

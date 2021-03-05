@@ -1,14 +1,17 @@
 package dev.ginyai.dailybonus.view.chest;
 
+import com.google.common.collect.ImmutableMap;
 import dev.ginyai.dailybonus.api.bonus.BonusRequirement;
 import dev.ginyai.dailybonus.api.bonus.BonusSet;
 import dev.ginyai.dailybonus.api.data.PlayerData;
 import dev.ginyai.dailybonus.DailyBonusMain;
 import dev.ginyai.dailybonus.bonus.SimpleBonusGiveResult;
+import dev.ginyai.dailybonus.placeholder.BonusSetValueContainer;
 import dev.ginyai.dailybonus.placeholder.DailyBonusPlaceholders;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.item.inventory.ItemStack;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -37,12 +40,17 @@ public class ChestElementBonus extends ChestElement {
     @Override
     public ItemStack getDisplay(PlayerData owner) {
         DailyBonusPlaceholders placeholders = dailyBonus.getPlaceholders();
+        Map<String, ?> map = ImmutableMap.of(
+            "player", owner,
+            "bonus", new BonusSetValueContainer(owner, bonusSet)
+        );
+        Function<String, String> replacePlaceholder = s -> placeholders.replacePlaceholders(s, map);
         if (owner.isReceived(bonusSet)) {
-            return receivedFunction.apply(s -> placeholders.replacePlaceholders(s, owner));
+            return receivedFunction.apply(replacePlaceholder);
         } else if (bonusSet.getRequirements().stream().allMatch(r -> r.check(owner))) {
-            return usableFunction.apply(s -> placeholders.replacePlaceholders(s, owner));
+            return usableFunction.apply(replacePlaceholder);
         } else {
-            return unusableFunction.apply(s -> placeholders.replacePlaceholders(s, owner));
+            return unusableFunction.apply(replacePlaceholder);
         }
     }
 
