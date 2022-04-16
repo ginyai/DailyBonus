@@ -60,6 +60,7 @@ public class SimpleDataManager implements PlayerDataManager {
         } else {
             player.setData(name, punchedDays, receivedBonus);
         }
+        player.postUpdate();
         return player;
     }
 

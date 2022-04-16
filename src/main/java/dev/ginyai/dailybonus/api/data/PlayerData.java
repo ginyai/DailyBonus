@@ -67,4 +67,6 @@ public abstract class PlayerData implements IPlaceholderContainer {
     public boolean isReceived(BonusSet bonusSet) {
         return receivedBonus.contains(bonusSet);
     }
+
+    public abstract void postUpdate();
 }

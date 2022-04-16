@@ -40,6 +40,11 @@ public class TrackedPlayer extends PlayerData {
         return Sponge.getServer().getPlayer(uuid);
     }
 
+    @Override
+    public void postUpdate() {
+        lastTickTime = 0;
+    }
+
     public void setDailyBonus(DailyBonusMain dailyBonus) {
         this.dailyBonus = dailyBonus;
     }
@@ -134,12 +139,8 @@ public class TrackedPlayer extends PlayerData {
         visitor.visit("uuid", getUniqueId());
         visitor.visit("onlinetimetoday", todayParser);
         visitor.visit("onlinetimetotal", totalParser);
-        bonusSetValueMap.forEach((s, v) -> {
-            visitor.visit("bonusset_" + s.getId(), v);
-        });
-        signGroupValueMap.forEach((s, v) -> {
-            visitor.visit("signgroup_" + s.getId(), v);
-        });
+        bonusSetValueMap.forEach((s, v) -> visitor.visit("bonusset_" + s.getId(), v));
+        signGroupValueMap.forEach((s, v) -> visitor.visit("signgroup_" + s.getId(), v));
     }
 
     public LocalDate getToday() {
