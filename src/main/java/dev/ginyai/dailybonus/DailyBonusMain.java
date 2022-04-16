@@ -85,6 +85,8 @@ import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
 
+import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
+
 @SuppressWarnings({"unused", "FieldMayBeFinal"})
 public class DailyBonusMain implements DailyBonusService, DailyBonusTimeService {
 
@@ -291,7 +293,7 @@ public class DailyBonusMain implements DailyBonusService, DailyBonusTimeService 
                             continue;
                         }
                     }
-                    Files.walk(dirPath, 1)
+                    Files.walk(dirPath, 1, FOLLOW_LINKS)
                         .filter(path -> path.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".conf"))
                         .forEach(path -> {
                             try {
@@ -353,12 +355,14 @@ public class DailyBonusMain implements DailyBonusService, DailyBonusTimeService 
                     Path dirPath = Paths.get(dirString.replace("%data_dir%", dataDir.toString()));
                     ConfigLoadingTracker.INSTANCE.loadDir(dirPath);
                     if (!Files.exists(dirPath)) {
+                        logger.info("Dir {} does not exist.", dirPath);
                         continue;
                     }
                     Files.walk(dirPath, 1)
                         .filter(path -> path.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".conf"))
                         .forEach(path -> {
                             try {
+                                logger.debug("Loading file {}", path);
                                 ConfigLoadingTracker.INSTANCE.loadFile(path);
                                 ConfigurationNode root = HoconConfigurationLoader.builder().setPath(path).build().load(options);
                                 for (Map.Entry<Object, ? extends ConfigurationNode> entry: root.getNode("DailyBonus", "ChestView").getChildrenMap().entrySet()) {
