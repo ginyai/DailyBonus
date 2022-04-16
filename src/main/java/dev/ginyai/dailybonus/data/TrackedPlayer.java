@@ -171,9 +171,11 @@ public class TrackedPlayer extends PlayerData {
         LocalDate today = Sponge.getServiceManager().provideUnchecked(DailyBonusTimeService.class).getToday();
         if (!today.equals(this.today)) {
             LocalDate date = this.today;
-            long online = onlineTimeToday;
-            CompletableFuture.runAsync(() -> dailyBonus.getStorage().setOnlineTime(getUniqueId(), date, online))
-                .whenComplete(UtilMethods.handleException(dailyBonus.getLogger(), "Exception on save online time data."));
+            if (date != null) {
+                long online = onlineTimeToday;
+                CompletableFuture.runAsync(() -> dailyBonus.getStorage().setOnlineTime(getUniqueId(), date, online))
+                    .whenComplete(UtilMethods.handleException(dailyBonus.getLogger(), "Exception on save online time data."));
+            }
             this.today = today;
             onlineTimeToday = 0;
             dailyBonus.getPlayerDataManager().updatePlayerData(optionalPlayer.get())
