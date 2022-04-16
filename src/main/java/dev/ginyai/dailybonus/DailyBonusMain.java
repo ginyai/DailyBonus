@@ -432,6 +432,10 @@ public class DailyBonusMain implements DailyBonusService, DailyBonusTimeService 
         return Optional.ofNullable(signGroupMap.get(id));
     }
 
+    public Collection<String> getSignGroupIds() {
+        return signGroupMap.keySet();
+    }
+
     @Override
     public Collection<? extends SignGroup> getSignGroups() {
         return signGroupMap.values();

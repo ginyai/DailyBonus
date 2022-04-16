@@ -23,7 +23,7 @@ public class CommandSign extends AbstractCommand {
     protected CommandElement getArgs() {
         return GenericArguments.seq(
             new ArgPermissionOther(dailyBonus, Text.of("player"), getPermissionString("other")),
-            GenericArguments.choices(Text.of("sign"), () -> dailyBonus.getBonusSetMap().keySet(), s -> dailyBonus.getBonusSetById(s).orElse(null), false)
+            GenericArguments.choices(Text.of("sign"), dailyBonus::getSignGroupIds, s -> dailyBonus.getSignGroupById(s).orElse(null), false)
         );
     }
 
