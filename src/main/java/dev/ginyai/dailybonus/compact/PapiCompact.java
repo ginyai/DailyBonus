@@ -48,11 +48,11 @@ public class PapiCompact implements ICompact {
     @Placeholder(id = "dailybonus")
     public Object getValue(@Token(fix = true) String token, @Source Player player) {
         PlayerData playerData = dailyBonus.getPlayerDataManager().getOrCreatePlayerData(player);
-        return playerData.parsePlaceholder(token.split(" "));
+        return playerData.parsePlaceholder(token.split("_"));
     }
 
     @Placeholder(id = "dailybonusdate")
-    public Object getDate(@Nullable @Token(fix = false) String token) {
+    public Object getDate(@Nullable @Token String token) {
         LocalDate today = dailyBonus.getToday();
         if (token == null) {
             return today.toString();
